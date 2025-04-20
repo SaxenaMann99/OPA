@@ -7,7 +7,7 @@ provider "google" {
 resource "google_storage_bucket" "example_bucket" {
   name     = "opa-test"
   location = "Asia"
-  predefined_acl = "publicRead"
+  public_access_prevention = "enforced"
 }
 
 # Optional: Define bucket ACLs

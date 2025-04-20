@@ -39,10 +39,17 @@ jobs:
     - name: Run OPA Policy Check
       run: |
         echo "Running OPA policy check"
-        if ! opa eval --input tfplan.json --data enforce_gcs_private.rego "data.terraform.deny"; then
-            echo "OPA policy check failed"
-            exit 1
+        opa eval --input tfplan.json --data enforce_gcs_private.rego "data.terraform.deny" -f pretty -o result.json
+        cat result.json
+        if grep -q "GCS buckets must not be PUBLIC" result.json; then 
+          echo "OPA policy check failed"
+          exit 1
         fi
+#        if ! opa eval --input tfplan.json --data enforce_gcs_private.rego "data.terraform.deny"; then
+#            echo "OPA policy check failed"
+        
+   #         exit 1
+   #     fi
 
     - name: Terraform Apply
       if: success()

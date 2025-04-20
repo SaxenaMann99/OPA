@@ -8,7 +8,7 @@ resource "google_storage_bucket" "example_bucket" {
   name     = "opa-test"
   location = "Asia"
 
-  Uncomment to test the OPA policy
+ # Uncomment to test the OPA policy
   acl = "publicRead"
 }
 

@@ -5,17 +5,19 @@ package terraform
 
 import input.tfplan as tfplan
 
-array_contains(arr, elem) {
-	arr[_] = elem
-}
+
+# array_contains(arr, elem) {
+# $	arr[_] = elem
+# }
 
 # Check Bucket Access Control
-
 deny[reason] {
 	r = tfplan.resource_changes[_]
 	r.mode == "managed"
 	r.type == "google_storage_bucket_access_control"
-	r.change.after.entity == "Public"
+    	r.change.after.entity == "allUsers"
+    	r.change.after.role == "READER"	
+#	r.change.after.entity == "Public"
 
 	reason := sprintf("%-40s :: GCS buckets must not be PUBLIC", 
 	                    [r.address])

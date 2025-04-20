@@ -39,7 +39,7 @@ jobs:
     - name: Run OPA Policy Check
       run: |
         echo "Running OPA policy check"
-        if ! opa eval --input tfplan.json --data policy.rego "data.terraform.deny"; then
+        if ! opa eval --input tfplan.json --data enforce_gcs_private.rego "data.terraform.deny"; then
             echo "OPA policy check failed"
             exit 1
         fi

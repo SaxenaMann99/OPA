@@ -22,5 +22,5 @@ resource "google_compute_instance" "vm_instance" {
 
 resource "google_storage_bucket" "bucket" {
   name     = "my-unique-bucket-name"
-  location = "Asia"
+  location = "US"
 }

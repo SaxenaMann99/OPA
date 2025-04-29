@@ -1,5 +1,5 @@
 provider "google" {
-  credentials = file("/tmp/credentials.json")
+  credentials = file("/tmp/key.json")
   project     = "project-terraform-457305"
   region      = "asia-south2"
 }

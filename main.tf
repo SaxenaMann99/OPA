@@ -4,23 +4,37 @@ provider "google" {
   region      = "asia-south2"
 }
 
-resource "google_storage_bucket" "example_bucket" {
-  name     = "opa-test"
+resource "google_compute_instance" "default" {
+  name         = "my-instance"
+  machine_type = "f1-micro"
+  zone         = "asia-south2-a"
+
+  tags = ["production", "team-name"]
+
+  boot_disk {
+    initialize_params {
+      image = "debian-cloud/debian-9"
+    }
+  }
+
+  network_interface {
+    network = "default"
+
+    access_config {
+    }
+  }
+}
+
+resource "google_storage_bucket" "default" {
+  name     = "my-bucket"
   location = "Asia"
-#  public_access_prevention = "enforced"
-}
 
-# Optional: Define bucket ACLs
-resource "google_storage_bucket_acl" "example_bucket_acl" {
-  bucket = google_storage_bucket.example_bucket.name
-  role_entity = [
-    "READER:allUsers", # This will trigger the OPA policy
-  ]
-}
+  versioning {
+    enabled = true
+  }
 
-# Optional: Define bucket access control
-resource "google_storage_bucket_access_control" "example_bucket_access_control" {
-  bucket = google_storage_bucket.example_bucket.name
-  entity = "allUsers"
-  role   = "READER" # This will trigger the OPA policy
+  labels = {
+    environment = "production"
+    owner       = "team-name"
+  }
 }

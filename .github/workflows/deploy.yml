@@ -1,0 +1,52 @@
+name: Terraform Deployment with OPA Policies
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository code
+      uses: actions/checkout@v3
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        version: '>= 363.0.0'
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Authenticate with Service Account
+      env:
+        GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+      run: echo "$GCP_SA_KEY" > /tmp/key.json && gcloud auth activate-service-account --key-file=/tmp/key.json
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+          terraform_wrapper: false
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Plan
+      run: terraform plan -out=terraform.tfplan
+
+#    - name: Convert Terraform plan to JSON
+#      run: terraform show -json tfplan.binary > tfplan.json
+
+    - name: Setup OPA
+      uses: open-policy-agent/setup-opa@v2
+      with:
+        version: latest
+
+    - name: Run OPA Policy Check
+      run: |
+        echo "Running OPA policy check"
+        opa eval --input terraform.tfplan --data enforce_gcs_private.rego -f pretty
+        
+#    - name: Terraform Apply
+#      if: success()
+#      run: terraform apply -auto-approve tfplan.binary

@@ -44,7 +44,7 @@ jobs:
     - name: Run OPA Policy Check
       run: |
         echo "Running OPA policy check"
-        opa exec --decision terraform/analysis/authz --bundle policy/ tfplan.json
+        opa exec --decision terraform/analysis/authz --bundle . tfplan.json
         
 #    - name: Terraform Apply
 #      if: success()

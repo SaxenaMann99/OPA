@@ -32,7 +32,9 @@ jobs:
       run: terraform init
 
     - name: Terraform Plan
-      run: terraform plan -out=terraform.tfplan && terraform show -json terraform.tfplan > terraform.json
+      run: | 
+        terraform plan -out=tfplan.binary 
+        terraform show -json tfplan.binary > tfplan.json
 
     - name: Setup OPA
       uses: open-policy-agent/setup-opa@v2
@@ -42,7 +44,7 @@ jobs:
     - name: Run OPA Policy Check
       run: |
         echo "Running OPA policy check"
-        opa eval --input terraform.json --data enforce_gcs_private.rego --format pretty "package policy.gcp.terraform"
+        opa exec --decision terraform/analysis/authz --bundle policy/ tfplan.json
         
 #    - name: Terraform Apply
 #      if: success()

@@ -4,37 +4,23 @@ provider "google" {
   region      = "asia-south2"
 }
 
-resource "google_compute_instance" "default" {
-  name         = "my-instance"
-  machine_type = "f1-micro"
+resource "google_compute_instance" "vm_instance" {
+  name         = "vm-instance"
+  machine_type = "e2-micro"
   zone         = "asia-south2-a"
-
-  tags = ["production", "team-name"]
 
   boot_disk {
     initialize_params {
-      image = "debian-cloud/debian-9"
+      image = "debian-cloud/debian-10"
     }
   }
 
   network_interface {
     network = "default"
-
-    access_config {
-    }
   }
 }
 
-resource "google_storage_bucket" "default" {
-  name     = "my-bucket"
+resource "google_storage_bucket" "bucket" {
+  name     = "my-unique-bucket-name"
   location = "Asia"
-
-  versioning {
-    enabled = true
-  }
-
-  labels = {
-    environment = "production"
-    owner       = "team-name"
-  }
 }

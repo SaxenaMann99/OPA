@@ -1,30 +1,36 @@
-package terraform
+package policy.gcp.terraform
 
-import input.tfplan as tfplan
-
-# Ensure GCS buckets are not public
-deny[reason] {
-    r := tfplan.resource_changes[_]
-    r.mode == "managed"
-    r.type == "google_storage_bucket_access_control"
-    r.change.after.entity == "allUsers"
-    r.change.after.role == "READER"
-
-    reason := sprintf("%-40s: GCS buckets must not be PUBLIC", [r.address])
+# Define a list of required tags for resources
+required_tags = {
+    "environment": "production",
+    "owner": "team-name"
 }
 
-# Check google_storage_bucket_acl for predefined ACL's
-deny[reason] {
-    r := tfplan.resource_changes[_]
-    r.mode == "managed"
-    r.type == "google_storage_bucket_acl"
-    array_contains(r.change.after.role_entity, "READER:allUsers")
-
-    reason := sprintf("%-40s: GCS buckets must not use predefined ACL '%s'", [r.address, r.change.after.role_entity])
+# Check that all resources have the required tags
+deny[msg] {
+    resource := input.resources[_]
+    missing_tags := {tag | required_tags[tag]; not resource.tags[tag]}
+    count(missing_tags) > 0
+    msg := sprintf("Resource %s is missing required tags: %v", [resource.name, missing_tags])
 }
 
-# Helper function to check if an array contains a specific element
-array_contains(arr, elem) {
-    some i
-    arr[i] == elem
+# Ensure that only allowed resource types are used
+allowed_resource_types = {
+    "google_compute_instance",
+    "google_storage_bucket",
+    "google_sql_database_instance"
+}
+
+deny[msg] {
+    resource := input.resources[_]
+    not allowed_resource_types[resource.type]
+    msg := sprintf("Resource %s of type %s is not allowed", [resource.name, resource.type])
+}
+
+# Check for specific configurations, e.g., ensure all storage buckets have versioning enabled
+deny[msg] {
+    resource := input.resources[_]
+    resource.type == "google_storage_bucket"
+    not resource.versioning.enabled
+    msg := sprintf("Storage bucket %s does not have versioning enabled", [resource.name])
 }

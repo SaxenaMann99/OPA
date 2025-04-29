@@ -42,7 +42,7 @@ jobs:
     - name: Run OPA Policy Check
       run: |
         echo "Running OPA policy check"
-        opa eval --input terraform.json --data enforce_gcs_private.rego --format pretty "data.terraform.deny"
+        opa eval --input terraform.json --data enforce_gcs_private.rego --format pretty "package policy.gcp.terraform"
         
 #    - name: Terraform Apply
 #      if: success()

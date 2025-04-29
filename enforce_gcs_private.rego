@@ -1,36 +1,23 @@
-package policy.gcp.terraform
+package terraform.analysis
 
-# Define a list of required tags for resources
-required_tags = {
-    "environment": "production",
-    "owner": "team-name"
-}
+import input as tfplan
 
-# Check that all resources have the required tags
-deny[msg] {
-    resource := input.resources[_]
-    missing_tags := {tag | required_tags[tag]; not resource.tags[tag]}
-    count(missing_tags) > 0
-    msg := sprintf("Resource %s is missing required tags: %v", [resource.name, missing_tags])
-}
+# Define acceptable configurations
+acceptable_machine_types := {"e2-micro", "e2-small"}
+acceptable_bucket_locations := {"US", "EU"}
 
-# Ensure that only allowed resource types are used
-allowed_resource_types = {
-    "google_compute_instance",
-    "google_storage_bucket",
-    "google_sql_database_instance"
-}
+# Default authorization decision
+default authz := false
 
-deny[msg] {
-    resource := input.resources[_]
-    not allowed_resource_types[resource.type]
-    msg := sprintf("Resource %s of type %s is not allowed", [resource.name, resource.type])
-}
+# Authorization holds if all resources meet the acceptable configurations
+authz if {
+    all_resources := tfplan.resource_changes[_]
 
-# Check for specific configurations, e.g., ensure all storage buckets have versioning enabled
-deny[msg] {
-    resource := input.resources[_]
-    resource.type == "google_storage_bucket"
-    not resource.versioning.enabled
-    msg := sprintf("Storage bucket %s does not have versioning enabled", [resource.name])
+    # Check compute instances
+    all_resources[_].type == "google_compute_instance"
+    all_resources[_].change.after.machine_type in acceptable_machine_types
+
+    # Check storage buckets
+    all_resources[_].type == "google_storage_bucket"
+    all_resources[_].change.after.location in acceptable_bucket_locations
 }
